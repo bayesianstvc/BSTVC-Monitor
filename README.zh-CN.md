@@ -4,12 +4,20 @@ BSTVC Monitor 是面向 Windows 的 INLA 进程资源监视器。它帮助用户
 
 > 重要：产品名称是 **BSTVC Monitor**，实际监测的 Windows 进程通常仍然是 `inla.exe`，不需要修改 INLA 或模型代码。
 
-## 快速开始
+## 快速开始：下载后只需双击一个文件
 
-1. 下载并解压发布包。
-2. 双击 `Start-BSTVC-Monitor.cmd`。
-3. 浏览器打开 `http://127.0.0.1:8765/` 后即可开始监测。
-4. `inla.exe` 可以在监视器启动前或启动后运行；新进程会自动识别，已结束进程仍会保留在记录中。
+**[下载 Windows 压缩包：`BSTVC-Monitor-v0.5.0-windows.zip`](https://github.com/bayesianstvc/BSTVC-Monitor/raw/refs/heads/main/dist/BSTVC-Monitor-v0.5.0-windows.zip)**
+
+下载完成后：
+
+1. 打开 Windows“下载”文件夹，右键 `BSTVC-Monitor-v0.5.0-windows.zip`，选择“全部解压”。
+2. 打开解压后的 `BSTVC-Monitor-v0.5.0-windows` 文件夹。
+3. 双击 **`Start-BSTVC-Monitor.cmd`**。这是正确的启动文件，会启动采集器并打开网页界面。
+4. 浏览器打开 `http://127.0.0.1:8765/` 后即可开始监测。
+
+> **不要直接双击 `dashboard.html` 启动工具。** 它是由本地监视器加载的网页界面，单独打开无法连接本地 API。请始终从 **`Start-BSTVC-Monitor.cmd`** 开始。
+
+`inla.exe` 可以在监视器启动前或启动后运行；新进程会自动识别，已结束进程仍会保留在记录中。解压后的文件夹可以直接移植使用，请保持文件完整并放在一起。
 
 英文界面默认打开，点击顶部语言按钮即可切换中文。采样间隔默认 5 秒，页面刷新默认 10 秒，两者可以独立设置。
 

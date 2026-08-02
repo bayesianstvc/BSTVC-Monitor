@@ -7,14 +7,20 @@ Real-time INLA process monitor for Windows — find your optimal thread count an
 [![Version](https://img.shields.io/badge/version-0.5.0-0f766e)](VERSION.md)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-orange)](LICENSE)
 
-## Download and run
+## Download and run — the shortest path
 
-**[Download the portable Windows ZIP](https://github.com/bayesianstvc/BSTVC-Monitor/raw/refs/heads/main/dist/BSTVC-Monitor-v0.5.0-windows.zip)** · [Browse the source](https://github.com/bayesianstvc/BSTVC-Monitor)
+**[Download this exact Windows package: `BSTVC-Monitor-v0.5.0-windows.zip`](https://github.com/bayesianstvc/BSTVC-Monitor/raw/refs/heads/main/dist/BSTVC-Monitor-v0.5.0-windows.zip)** · [Browse the source](https://github.com/bayesianstvc/BSTVC-Monitor)
 
-1. Download and extract the ZIP to a normal user folder.
-2. Double-click **`Start-BSTVC-Monitor.cmd`**.
-3. The launcher starts a local monitor and opens `http://127.0.0.1:8765/`.
-4. Start or stop `inla.exe` whenever you need; the monitor discovers new instances and keeps ended runs visible.
+After the download finishes:
+
+1. Open your **Downloads** folder, right-click `BSTVC-Monitor-v0.5.0-windows.zip`, and choose **Extract All…**.
+2. Open the extracted `BSTVC-Monitor-v0.5.0-windows` folder.
+3. Double-click **`Start-BSTVC-Monitor.cmd`**. This is the correct file that starts the collector and opens the interface.
+4. Wait for the browser to open `http://127.0.0.1:8765/`, then start or stop `inla.exe` whenever you need.
+
+> **Do not double-click `dashboard.html` to start the tool.** It is the browser interface loaded by the local monitor; opening it directly cannot connect to the local API. Always start with **`Start-BSTVC-Monitor.cmd`**.
+
+The monitor discovers new `inla.exe` instances and keeps ended runs visible. The extracted folder is portable and self-contained; keep all files together.
 
 The portable folder is self-contained. No installer, administrator permission, internet connection, database, or cloud account is required. Keep the files together after extraction. If Windows shows a SmartScreen prompt for a downloaded script, inspect the source and choose the normal “More info → Run anyway” path only when you trust the download.
 
