@@ -1,0 +1,15 @@
+# Local monitoring output — never commit user run data.
+runs/
+*.csv
+*.json
+*.log
+*.tmp
+
+# Local generated pages and archives.
+live.html
+report.html
+
+# Editor and operating-system noise.
+.DS_Store
+Thumbs.db
+*.swp
