@@ -9,7 +9,7 @@ Real-time INLA process monitor for Windows — find your optimal thread count an
 
 ## Download and run
 
-**[Download the portable Windows ZIP](dist/BSTVC-Monitor-v0.5.0-windows.zip)** · [Browse the source](https://github.com/bayesianstvc/BSTVC-Monitor)
+**[Download the portable Windows ZIP](https://github.com/bayesianstvc/BSTVC-Monitor/raw/refs/heads/main/dist/BSTVC-Monitor-v0.5.0-windows.zip)** · [Browse the source](https://github.com/bayesianstvc/BSTVC-Monitor)
 
 1. Download and extract the ZIP to a normal user folder.
 2. Double-click **`Start-BSTVC-Monitor.cmd`**.
