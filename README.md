@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/bstvc-monitor-logo.png" alt="BSTVC Monitor logo" width="220">
+</p>
+
 # BSTVC Monitor
 
 Real-time INLA process monitor for Windows — find your optimal thread count and solve Bayesian latent Gaussian models faster.

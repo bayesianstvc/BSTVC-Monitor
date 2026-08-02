@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/bstvc-monitor-logo.png" alt="BSTVC Monitor 标识" width="220">
+</p>
+
 # BSTVC Monitor 中文说明
 
 BSTVC Monitor 是面向 Windows 的 INLA 进程资源监视器。它帮助用户在相同模型、数据和收敛条件下比较不同线程参数，寻找适合自己电脑或工作站的线程数。
