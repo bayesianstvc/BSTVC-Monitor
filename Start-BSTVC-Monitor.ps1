@@ -1,4 +1,7 @@
-﻿[CmdletBinding()]
+Exit code: 0
+Wall time: 1.4 seconds
+Output:
+[CmdletBinding()]
 param(
     [string]$ProcessName = "inla",
     [string]$OutputDirectory = "",
@@ -137,3 +140,4 @@ if ($healthyMonitor) {
     Write-Warning "The monitor was launched but did not answer its local API within 25 seconds. Data may still be written to: $OutputDirectory"
     Write-Host "Check the newest run folder in that directory for diagnostics."
 }
+

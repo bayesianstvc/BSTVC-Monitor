@@ -1,4 +1,8 @@
-﻿[CmdletBinding()]
+Exit code: 0
+Wall time: 1.5 seconds
+Total output lines: 886
+Output:
+[CmdletBinding()]
 param(
     [string]$ProcessName = "inla",
     [string]$OutputDirectory = "",
@@ -48,6 +52,7 @@ $summaryJsonPath = Join-Path $runFolder "summary.json"
 $reportPath = Join-Path $runFolder "report.html"
 $livePath = Join-Path $runFolder "live.html"
 $dashboardSource = Join-Path $PSScriptRoot "dashboard.html"
+$dashboardAssetsSource = Join-Path $PSScriptRoot "assets"
 
 $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
 $metricsWriter = [System.IO.StreamWriter]::new($metricsPath, $false, $utf8NoBom)
@@ -402,123 +407,7 @@ function Sample-Processes {
     $hostCpuMetrics = $script:cachedHostCpuMetrics
     if ($null -eq $hostCpuMetrics) { $hostCpuMetrics = [PSCustomObject]@{ utility = $null; time = $null; scale = 1.0 } }
     $hostCpu = $hostCpuMetrics.utility
-    $hostCpuTime = $hostCpuMetrics.time
-    $cpuUtilityScale = $hostCpuMetrics.scale
-    $hostMemory = $script:cachedHostMemory
-    $windowsCpuByPid = if ($null -ne $script:cachedWindowsCpuByPid) { $script:cachedWindowsCpuByPid } else { @{} }
-    $processDiagnosticsByPid = if ($null -ne $script:cachedWindowsProcessDiagnosticsByPid) { $script:cachedWindowsProcessDiagnosticsByPid } else { @{} }
-    $currentPids = [System.Collections.Generic.HashSet[int]]::new()
-    foreach ($process in $processes) {
-        [void]$currentPids.Add([int]$process.Id)
-    }
-    foreach ($oldPid in @($script:previousPids)) {
-        if (-not $currentPids.Contains($oldPid)) {
-            Write-Event -Event "exited" -ProcessId "$oldPid" -Detail "process disappeared"
-            $metadata = if ($script:processMetadata.ContainsKey($oldPid)) { $script:processMetadata[$oldPid] } else { $null }
-            $stopped = [PSCustomObject]@{
-                timestamp = $now.ToString("o"); run_id = $safeRunId; label = $Label; status = "stopped"; pid = $oldPid; process_name = $targetName
-                process_start_time = if ($metadata -and $metadata.start_time) { $metadata.start_time.ToString("o") } else { $null }
-                process_runtime_seconds = if ($metadata) { $metadata.last_runtime_seconds } else { $null }
-                cpu_pct_total = $null; cpu_pct_logical_total = $null; cpu_core_equivalent = $null; windows_counter_cpu_pct = $null
-                working_set_mb = $null; private_mb = $null; virtual_memory_mb = $null; paged_memory_mb = $null
-                thread_count = if ($metadata) { $metadata.last_thread_count } else { $null }
-                io_read_bytes_per_sec = $null; io_write_bytes_per_sec = $null; page_faults_per_sec = $null; context_switches_per_sec = $null
-                process_count = $processes.Count; host_cpu_pct = $hostCpu; host_cpu_time_pct = $hostCpuTime; cpu_utility_scale = $cpuUtilityScale; host_memory_pct = $hostMemory
-            }
-            Write-CsvObject -Writer $metricsWriter -Object $stopped
-            Add-HistoryRow -Row $stopped
-            $script:lastCpu.Remove($oldPid)
-            $script:processMetadata.Remove($oldPid)
-        }
-    }
-    foreach ($newPid in @($currentPids)) {
-        if (-not $script:previousPids.Contains($newPid)) {
-            Write-Event -Event "started" -ProcessId "$newPid" -Detail "process detected"
-            $script:processMetadata[$newPid] = [PSCustomObject]@{ first_seen_at = $now; start_time = $null; last_runtime_seconds = $null; last_thread_count = $null; last_seen_at = $now }
-        }
-    }
-
-    if ($processes.Count -eq 0) {
-        $waiting = [PSCustomObject]@{
-            timestamp = $now.ToString("o"); run_id = $safeRunId; label = $Label; status = "waiting"; pid = $null; process_name = $targetName; process_start_time = $null; process_runtime_seconds = $null
-            cpu_pct_total = $null; cpu_pct_logical_total = $null; cpu_core_equivalent = $null; windows_counter_cpu_pct = $null; working_set_mb = $null; private_mb = $null; virtual_memory_mb = $null; paged_memory_mb = $null
-            thread_count = $null; process_count = 0; io_read_bytes_per_sec = $null; io_write_bytes_per_sec = $null; page_faults_per_sec = $null; context_switches_per_sec = $null; host_cpu_pct = $hostCpu; host_cpu_time_pct = $hostCpuTime; cpu_utility_scale = $cpuUtilityScale; host_memory_pct = $hostMemory
-        }
-        Write-CsvObject -Writer $metricsWriter -Object $waiting
-        Add-HistoryRow -Row $waiting
-    } else {
-        foreach ($process in $processes) {
-            $processId = [int]$process.Id
-            if (-not $script:processMetadata.ContainsKey($processId)) {
-                $script:processMetadata[$processId] = [PSCustomObject]@{ first_seen_at = $now; start_time = $null; last_runtime_seconds = $null; last_thread_count = $null; last_seen_at = $now }
-            }
-            $processStartTime = $null
-            try { $processStartTime = [DateTimeOffset]$process.StartTime } catch {}
-            if ($null -ne $processStartTime) {
-                $script:processMetadata[$processId].start_time = $processStartTime
-            } else {
-                $processStartTime = $script:processMetadata[$processId].start_time
-            }
-            $processRuntimeSeconds = if ($null -ne $processStartTime) { [Math]::Max(0, [Math]::Round(($now - $processStartTime).TotalSeconds, 3)) } else { [Math]::Max(0, [Math]::Round(($now - $script:processMetadata[$processId].first_seen_at).TotalSeconds, 3)) }
-            $status = "warmup"
-            $cpuTotal = 0.0
-            $cpuLogicalTotal = 0.0
-            $cpuCore = 0.0
-            $windowsCounterCpu = $null
-            try {
-                $cpuSeconds = [double]$process.TotalProcessorTime.TotalSeconds
-                if ($script:lastCpu.ContainsKey($processId)) {
-                    $previous = $script:lastCpu[$processId]
-                    $elapsed = ($now - $previous.timestamp).TotalSeconds
-                    if ($elapsed -gt 0) {
-                        $cpuCore = [Math]::Max(0, [Math]::Min(100 * [Environment]::ProcessorCount, 100 * (($cpuSeconds - $previous.cpuSeconds) / $elapsed)))
-                        $cpuLogicalTotal = [Math]::Max(0, [Math]::Min(100, $cpuCore / $script:logicalProcessorCount))
-                        # Windows Task Manager's Processes/Performance CPU values use Processor Utility,
-                        # while Process\% Processor Time is a time-based counter. Apply the host utility/time
-                        # ratio to the PID's time-based total so the main series follows Task Manager's basis.
-                        $cpuTotal = [Math]::Max(0, [Math]::Min(100, $cpuLogicalTotal * $cpuUtilityScale))
-                        $status = "running"
-                    }
-                }
-                $script:lastCpu[$processId] = [PSCustomObject]@{ timestamp = $now; cpuSeconds = $cpuSeconds }
-            } catch {
-                $status = "unreadable"
-            }
-            if ($windowsCpuByPid.ContainsKey($processId)) {
-                # Keep Process\% Processor Time as an advanced diagnostic only. It is
-                # measured in a separate performance-counter window and can be out of
-                # phase with the Get-Process CPU-time and Working Set snapshot. The
-                # primary Task Manager-basis value above must not be overwritten here.
-                $windowsCounterCpu = $windowsCpuByPid[$processId]
-            }
-            $threadCount = $null
-            try { $threadCount = [int]$process.Threads.Count } catch {}
-            $diagnosticCounters = if ($processDiagnosticsByPid.ContainsKey($processId)) { $processDiagnosticsByPid[$processId] } else { $null }
-            $row = [PSCustomObject]@{
-                timestamp = $now.ToString("o"); run_id = $safeRunId; label = $Label; status = $status; pid = $processId; process_name = $targetName; process_start_time = if ($null -ne $processStartTime) { $processStartTime.ToString("o") } else { $null }; process_runtime_seconds = $processRuntimeSeconds
-                cpu_pct_total = [Math]::Round($cpuTotal, 3); cpu_pct_logical_total = [Math]::Round($cpuLogicalTotal, 3); cpu_core_equivalent = [Math]::Round($cpuCore, 3); windows_counter_cpu_pct = $windowsCounterCpu
-                working_set_mb = [Math]::Round(([double]$process.WorkingSet64 / 1MB), 3)
-                private_mb = [Math]::Round(([double]$process.PrivateMemorySize64 / 1MB), 3)
-                virtual_memory_mb = [Math]::Round(([double]$process.VirtualMemorySize64 / 1MB), 3)
-                paged_memory_mb = [Math]::Round(([double]$process.PagedMemorySize64 / 1MB), 3)
-                thread_count = $threadCount
-                io_read_bytes_per_sec = if ($diagnosticCounters) { $diagnosticCounters.io_read } else { $null }
-                io_write_bytes_per_sec = if ($diagnosticCounters) { $diagnosticCounters.io_write } else { $null }
-                page_faults_per_sec = if ($diagnosticCounters) { $diagnosticCounters.page_faults } else { $null }
-                context_switches_per_sec = if ($diagnosticCounters) { $diagnosticCounters.context_switches } else { $null }
-                process_count = $processes.Count; host_cpu_pct = $hostCpu; host_cpu_time_pct = $hostCpuTime; cpu_utility_scale = $cpuUtilityScale; host_memory_pct = $hostMemory
-            }
-            Write-CsvObject -Writer $metricsWriter -Object $row
-            Add-HistoryRow -Row $row
-            $script:processMetadata[$processId].last_runtime_seconds = $processRuntimeSeconds
-            $script:processMetadata[$processId].last_thread_count = $threadCount
-            $script:processMetadata[$processId].last_seen_at = $now
-        }
-    }
-    $script:previousPids = $currentPids
-    $script:sampleCount++
-    # Refresh slow diagnostics only after the primary CPU/memory rows have
-    # been timestamped and written. The elapsed time of this work is then
+    $hostCpuTime = $hostC…2489 tokens truncated…ime of this work is then
     # included in the next sample interval instead of corrupting this one.
     if ($refreshDiagnostics) {
         $script:cachedHostCpuMetrics = Get-HostCpuCounters
@@ -604,6 +493,26 @@ function Handle-HttpRequest {
         if ($path -eq "/" -or $path -eq "/dashboard.html") {
             $html = Get-Content -LiteralPath $dashboardSource -Raw -Encoding UTF8
             Write-Response -Context $Context -StatusCode 200 -ContentType "text/html; charset=utf-8" -Bytes $utf8NoBom.GetBytes($html)
+        } elseif ($path.StartsWith("/assets/", [StringComparison]::OrdinalIgnoreCase)) {
+            $assetRelative = $path.Substring(8)
+            $assetName = [System.IO.Path]::GetFileName($assetRelative)
+            if ([string]::IsNullOrWhiteSpace($assetName) -or $assetName -ne $assetRelative) {
+                Write-Response -Context $Context -StatusCode 404 -ContentType "text/plain; charset=utf-8" -Bytes $utf8NoBom.GetBytes("Not found")
+                return
+            }
+            $assetPath = Join-Path $dashboardAssetsSource $assetName
+            if (-not (Test-Path -LiteralPath $assetPath -PathType Leaf)) {
+                Write-Response -Context $Context -StatusCode 404 -ContentType "text/plain; charset=utf-8" -Bytes $utf8NoBom.GetBytes("Not found")
+                return
+            }
+            $assetType = switch ([System.IO.Path]::GetExtension($assetName).ToLowerInvariant()) {
+                ".png" { "image/png" }
+                ".jpg" { "image/jpeg" }
+                ".jpeg" { "image/jpeg" }
+                ".svg" { "image/svg+xml" }
+                default { "application/octet-stream" }
+            }
+            Write-Response -Context $Context -StatusCode 200 -ContentType $assetType -Bytes ([System.IO.File]::ReadAllBytes($assetPath))
         } elseif ($path -eq "/api/metrics") {
             $metricRows = @($script:historyRows.ToArray())
             $sinceText = [string]$Context.Request.QueryString["since"]
@@ -618,7 +527,7 @@ function Handle-HttpRequest {
             $limit = 0
             $limitText = [string]$Context.Request.QueryString["limit"]
             if (-not [int]::TryParse($limitText, [ref]$limit)) { $limit = 0 }
-            $limit = [Math]::Max(0, [Math]::Min(50000, $limit))
+    $limit = [Math]::Max(0, [Math]::Min(90000, $limit))
             if ($limit -gt 0 -and $metricRows.Count -gt $limit) { $metricRows = @($metricRows | Select-Object -Last $limit) }
             Write-JsonResponse -Context $Context -Object $metricRows
         } elseif ($path -eq "/api/summary") {
@@ -701,7 +610,17 @@ function Handle-HttpRequest {
     }
 }
 
+function Copy-DashboardAssets {
+    if (-not (Test-Path -LiteralPath $dashboardAssetsSource)) { return }
+    $targetAssets = Join-Path $runFolder "assets"
+    if (-not (Test-Path -LiteralPath $targetAssets)) { New-Item -ItemType Directory -Path $targetAssets -Force | Out-Null }
+    foreach ($asset in @(Get-ChildItem -LiteralPath $dashboardAssetsSource -File)) {
+        Copy-Item -LiteralPath $asset.FullName -Destination (Join-Path $targetAssets $asset.Name) -Force
+    }
+}
+
 function Write-Report {
+    Copy-DashboardAssets
     $allRows = @(Import-Csv -LiteralPath $metricsPath -Encoding UTF8)
     $aggregates = @(Get-Aggregates -Rows $allRows)
     $summary = Get-Summary -Rows $allRows
@@ -720,6 +639,7 @@ function Write-Report {
 }
 
 function Write-LiveDashboard {
+    Copy-DashboardAssets
     $recentRows = @($script:historyRows.ToArray())
     if ($recentRows.Count -gt 9600) {
         $recentRows = @($recentRows | Select-Object -Last 9600)
@@ -837,3 +757,4 @@ try {
         Write-Warning ("The report could not be generated, but the raw logs were saved: {0}" -f $_.Exception.Message)
     }
 }
+

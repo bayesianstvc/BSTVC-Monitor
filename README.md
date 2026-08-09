@@ -1,24 +1,27 @@
+Exit code: 0
+Wall time: 1.6 seconds
+Output:
 <p align="center">
   <img src="docs/images/bstvc-monitor-logo.png" alt="BSTVC Monitor logo" width="220">
 </p>
 
-# BSTVC Monitor
+# BSTVC Monitor v0.5.7
 
 Real-time INLA process monitor for Windows — find your optimal thread count and solve Bayesian latent Gaussian models faster.
 
 [![Windows](https://img.shields.io/badge/platform-Windows-0078D4?logo=windows&logoColor=white)](https://www.microsoft.com/windows)
 [![PowerShell](https://img.shields.io/badge/runtime-PowerShell-5391FE?logo=powershell&logoColor=white)](https://learn.microsoft.com/powershell/)
-[![Version](https://img.shields.io/badge/version-0.5.0-0f766e)](VERSION.md)
+[![Version](https://img.shields.io/badge/version-0.5.5-0f766e)](VERSION.md)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-orange)](LICENSE)
 
 ## Download and run — the shortest path
 
-**[Download this exact Windows package: `BSTVC-Monitor-v0.5.0-windows.zip`](https://github.com/bayesianstvc/BSTVC-Monitor/raw/refs/heads/main/dist/BSTVC-Monitor-v0.5.0-windows.zip)** · [Browse the source](https://github.com/bayesianstvc/BSTVC-Monitor)
+**[Download this exact Windows package: `BSTVC-Monitor-v0.5.7-windows.zip`](https://github.com/bayesianstvc/BSTVC-Monitor/raw/refs/heads/main/dist/BSTVC-Monitor-v0.5.7-windows.zip)** · [Browse the source](https://github.com/bayesianstvc/BSTVC-Monitor)
 
 After the download finishes:
 
-1. Open your **Downloads** folder, right-click `BSTVC-Monitor-v0.5.0-windows.zip`, and choose **Extract All…**.
-2. Open the extracted `BSTVC-Monitor-v0.5.0-windows` folder.
+1. Open your **Downloads** folder, right-click `BSTVC-Monitor-v0.5.7-windows.zip`, and choose **Extract All…**.
+2. Open the extracted `BSTVC-Monitor-v0.5.7-windows` folder.
 3. Double-click **`Start-BSTVC-Monitor.cmd`**. This is the correct file that starts the collector and opens the interface.
 4. Wait for the browser to open `http://127.0.0.1:8765/`, then start or stop `inla.exe` whenever you need.
 
@@ -29,6 +32,8 @@ The monitor discovers new `inla.exe` instances and keeps ended runs visible. The
 The portable folder is self-contained. No installer, administrator permission, internet connection, database, or cloud account is required. Keep the files together after extraction. If Windows shows a SmartScreen prompt for a downloaded script, inspect the source and choose the normal “More info → Run anyway” path only when you trust the download.
 
 > **Important:** the product is branded **BSTVC Monitor**, while the Windows process it observes is normally `inla.exe`. You do not need to rename INLA or change your model code.
+
+This is a Windows desktop tool. Phones and tablets are not supported targets; the layout is tuned for a workstation or laptop window beside Windows Task Manager.
 
 ## Why this tool exists
 
@@ -55,6 +60,9 @@ The central question is not “how high can CPU usage go?” It is:
 - CPU and memory curves with hover values, synchronized time selection, child-model overlays, event markers, timeline navigation, and exportable reports.
 - Advanced Windows counters when available, including logical-core diagnostics, disk read/write rate, page faults, context switches, cache size, API/render time, and health status.
 - A safe recovery panel for reconnecting the page, clearing only the browser cache, starting a new run, restoring the page, and checking monitor/API health.
+- A cautious **current resource-performance leader** summary rather than an absolute “best” claim, with model name as the primary identity and PID as the trace identifier.
+- Sample-integrity labels for complete cycles and short-fill periods, three ended-record retention levels, same-running-phase comparison, and export preflight checks.
+- Evidence for automatic CPU thresholds, automatic desktop density presets for 1920/1440/1366/1024 widths, a compact sticky live-status bar, and a side drawer for secondary PID-card actions.
 
 ## Screenshots
 
@@ -67,6 +75,8 @@ The central question is not “how high can CPU usage go?” It is:
 ![BSTVC Monitor Chinese dashboard](docs/images/bstvc-monitor-zh.png)
 
 The dashboard opens in English. Use the language button in the top toolbar to switch to Chinese. The export package and generated HTML report follow the selected interface language.
+
+The v0.5.7 desktop pass keeps the title bar compact and logo-led, keeps the main CPU/memory judgement area visible, and makes the first-load state quieter: **Composite evaluation**, **Advanced monitoring**, **Page problem handling**, and **Automatic phase detection** start closed. The phase status ribbon stays attached to the **Timeline navigator** so it remains synchronized with the CPU and memory selection even when the detailed phase panel is closed. Current, average, and peak values follow a fixed reading order; low-frequency process-card actions open in a side drawer; and persistent decorative motion is disabled so motion is reserved for connection recovery, process end, and risk escalation.
 
 ## How to compare with Windows Task Manager
 
@@ -207,3 +217,4 @@ If this monitor helps a published study, please cite the repository and describe
 ## 中文入口
 
 中文说明见 [README.zh-CN.md](README.zh-CN.md)。英文界面是默认设置，用户可在页面顶部一键切换中文。
+

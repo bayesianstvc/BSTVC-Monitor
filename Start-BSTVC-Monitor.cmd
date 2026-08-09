@@ -1,3 +1,6 @@
+Exit code: 0
+Wall time: 1.6 seconds
+Output:
 @echo off
 setlocal
 set "launcher=%~dp0Start-BSTVC-Monitor.ps1"
@@ -16,3 +19,4 @@ if not "%exitCode%"=="0" (
 )
 
 endlocal & exit /b %exitCode%
+
