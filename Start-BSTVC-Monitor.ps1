@@ -21,6 +21,7 @@ if ($null -eq ("System.Net.Http.HttpClient" -as [type])) {
 }
 $toolRoot = $PSScriptRoot
 $monitorScript = Join-Path $toolRoot "bstvc-monitor.ps1"
+$dashboardFile = Join-Path $toolRoot "dashboard.html"
 
 function Get-DefaultOutputDirectory {
     $localAppData = [Environment]::GetFolderPath([Environment+SpecialFolder]::LocalApplicationData)
@@ -83,6 +84,7 @@ function Open-MonitorPage {
 }
 
 if (-not (Test-Path -LiteralPath $monitorScript)) { throw "Monitor engine script was not found: $monitorScript" }
+if (-not (Test-Path -LiteralPath $dashboardFile)) { throw "Dashboard file was not found: $dashboardFile. Re-extract the complete BSTVC Monitor package." }
 if ([string]::IsNullOrWhiteSpace($OutputDirectory)) { $OutputDirectory = Get-DefaultOutputDirectory }
 $OutputDirectory = [System.IO.Path]::GetFullPath($OutputDirectory)
 New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null
