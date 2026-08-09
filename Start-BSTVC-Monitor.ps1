@@ -11,7 +11,8 @@ param(
     [ValidateRange(1024, 65535)]
     [int]$Port = 8765,
     [switch]$NoBrowser,
-    [switch]$OpenDataFolder
+    [switch]$OpenDataFolder,
+    [switch]$ReuseHealthyMonitor
 )
 
 $ErrorActionPreference = "Stop"
@@ -88,7 +89,7 @@ New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null
 
 $targetName = [System.IO.Path]::GetFileNameWithoutExtension($ProcessName)
 $healthyMonitor = Get-HealthyMonitor -CheckPort $Port
-if ($healthyMonitor -and [string]::Equals([string]$healthyMonitor.process_name, $targetName, [System.StringComparison]::OrdinalIgnoreCase)) {
+if ($ReuseHealthyMonitor -and $healthyMonitor -and [string]::Equals([string]$healthyMonitor.process_name, $targetName, [System.StringComparison]::OrdinalIgnoreCase)) {
     $url = "http://127.0.0.1:$Port/"
     Write-Host "Reusing the healthy $targetName monitor: $url"
     if ($OpenDataFolder) { Start-Process $OutputDirectory }
@@ -108,18 +109,9 @@ if ($healthyMonitor -or (Test-TcpPortInUse -CheckPort $Port)) {
 
 $runToken = if ([string]::IsNullOrWhiteSpace($RunId)) { "auto-" + [DateTime]::Now.ToString("yyyyMMdd-HHmmss") } else { $RunId }
 $shell = Get-PowerShellExecutable
-$arguments = @(
-    "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ('"{0}"' -f $monitorScript),
-    "-ProcessName", ('"{0}"' -f $targetName),
-    "-OutputDirectory", ('"{0}"' -f $OutputDirectory),
-    "-RunId", ('"{0}"' -f $runToken),
-    "-Label", ('"{0}"' -f $Label),
-    "-IntervalSeconds", "$IntervalSeconds",
-    "-HighCpuThreshold", "$HighCpuThreshold",
-    "-Port", "$Port",
-    "-NoBrowser"
-)
-Start-Process -FilePath $shell -ArgumentList $arguments -WindowStyle Hidden | Out-Null
+$childCommand = "& '$monitorScript' -ProcessName '$targetName' -OutputDirectory '$OutputDirectory' -RunId '$runToken' -Label '$Label' -IntervalSeconds $IntervalSeconds -HighCpuThreshold $HighCpuThreshold -Port $Port -NoBrowser"
+$encodedCommand = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($childCommand))
+Start-Process -FilePath $shell -ArgumentList @('-NoLogo', '-NoProfile', '-EncodedCommand', $encodedCommand) -WindowStyle Hidden | Out-Null
 
 $deadline = [DateTime]::UtcNow.AddSeconds(25)
 do {

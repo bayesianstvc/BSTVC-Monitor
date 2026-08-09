@@ -48,6 +48,7 @@ $summaryJsonPath = Join-Path $runFolder "summary.json"
 $reportPath = Join-Path $runFolder "report.html"
 $livePath = Join-Path $runFolder "live.html"
 $dashboardSource = Join-Path $PSScriptRoot "dashboard.html"
+$dashboardAssetsSource = Join-Path $PSScriptRoot "assets"
 
 $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
 $metricsWriter = [System.IO.StreamWriter]::new($metricsPath, $false, $utf8NoBom)
@@ -408,13 +409,25 @@ function Sample-Processes {
     $windowsCpuByPid = if ($null -ne $script:cachedWindowsCpuByPid) { $script:cachedWindowsCpuByPid } else { @{} }
     $processDiagnosticsByPid = if ($null -ne $script:cachedWindowsProcessDiagnosticsByPid) { $script:cachedWindowsProcessDiagnosticsByPid } else { @{} }
     $currentPids = [System.Collections.Generic.HashSet[int]]::new()
+    $currentProcessStarts = @{}
     foreach ($process in $processes) {
-        [void]$currentPids.Add([int]$process.Id)
+        $currentPid = [int]$process.Id
+        [void]$currentPids.Add($currentPid)
+        try { $currentProcessStarts[$currentPid] = [DateTimeOffset]$process.StartTime } catch {}
     }
+    $restartedPids = [System.Collections.Generic.HashSet[int]]::new()
     foreach ($oldPid in @($script:previousPids)) {
-        if (-not $currentPids.Contains($oldPid)) {
-            Write-Event -Event "exited" -ProcessId "$oldPid" -Detail "process disappeared"
-            $metadata = if ($script:processMetadata.ContainsKey($oldPid)) { $script:processMetadata[$oldPid] } else { $null }
+        $metadata = if ($script:processMetadata.ContainsKey($oldPid)) { $script:processMetadata[$oldPid] } else { $null }
+        $pidReused = $false
+        if ($currentPids.Contains($oldPid) -and $metadata -and $metadata.start_time -and $currentProcessStarts.ContainsKey($oldPid)) {
+            $oldStart = ([DateTimeOffset]$metadata.start_time).ToString("o")
+            $newStart = ([DateTimeOffset]$currentProcessStarts[$oldPid]).ToString("o")
+            $pidReused = $oldStart -ne $newStart
+        }
+        if (-not $currentPids.Contains($oldPid) -or $pidReused) {
+            $eventName = if ($pidReused) { "restarted" } else { "exited" }
+            $eventDetail = if ($pidReused) { "PID reused; process start time changed" } else { "process disappeared" }
+            Write-Event -Event $eventName -ProcessId "$oldPid" -Detail $eventDetail
             $stopped = [PSCustomObject]@{
                 timestamp = $now.ToString("o"); run_id = $safeRunId; label = $Label; status = "stopped"; pid = $oldPid; process_name = $targetName
                 process_start_time = if ($metadata -and $metadata.start_time) { $metadata.start_time.ToString("o") } else { $null }
@@ -429,11 +442,13 @@ function Sample-Processes {
             Add-HistoryRow -Row $stopped
             $script:lastCpu.Remove($oldPid)
             $script:processMetadata.Remove($oldPid)
+            if ($pidReused) { [void]$restartedPids.Add($oldPid) }
         }
     }
     foreach ($newPid in @($currentPids)) {
-        if (-not $script:previousPids.Contains($newPid)) {
-            Write-Event -Event "started" -ProcessId "$newPid" -Detail "process detected"
+        if (-not $script:previousPids.Contains($newPid) -or $restartedPids.Contains($newPid)) {
+            $detail = if ($restartedPids.Contains($newPid)) { "new process instance after PID reuse" } else { "process detected" }
+            Write-Event -Event "started" -ProcessId "$newPid" -Detail $detail
             $script:processMetadata[$newPid] = [PSCustomObject]@{ first_seen_at = $now; start_time = $null; last_runtime_seconds = $null; last_thread_count = $null; last_seen_at = $now }
         }
     }
@@ -449,7 +464,7 @@ function Sample-Processes {
     } else {
         foreach ($process in $processes) {
             $processId = [int]$process.Id
-            if (-not $script:processMetadata.ContainsKey($processId)) {
+            if (-not $script:processMetadata.ContainsKey($processId) -or $restartedPids.Contains($processId)) {
                 $script:processMetadata[$processId] = [PSCustomObject]@{ first_seen_at = $now; start_time = $null; last_runtime_seconds = $null; last_thread_count = $null; last_seen_at = $now }
             }
             $processStartTime = $null
@@ -604,6 +619,26 @@ function Handle-HttpRequest {
         if ($path -eq "/" -or $path -eq "/dashboard.html") {
             $html = Get-Content -LiteralPath $dashboardSource -Raw -Encoding UTF8
             Write-Response -Context $Context -StatusCode 200 -ContentType "text/html; charset=utf-8" -Bytes $utf8NoBom.GetBytes($html)
+        } elseif ($path.StartsWith("/assets/", [StringComparison]::OrdinalIgnoreCase)) {
+            $assetRelative = $path.Substring(8)
+            $assetName = [System.IO.Path]::GetFileName($assetRelative)
+            if ([string]::IsNullOrWhiteSpace($assetName) -or $assetName -ne $assetRelative) {
+                Write-Response -Context $Context -StatusCode 404 -ContentType "text/plain; charset=utf-8" -Bytes $utf8NoBom.GetBytes("Not found")
+                return
+            }
+            $assetPath = Join-Path $dashboardAssetsSource $assetName
+            if (-not (Test-Path -LiteralPath $assetPath -PathType Leaf)) {
+                Write-Response -Context $Context -StatusCode 404 -ContentType "text/plain; charset=utf-8" -Bytes $utf8NoBom.GetBytes("Not found")
+                return
+            }
+            $assetType = switch ([System.IO.Path]::GetExtension($assetName).ToLowerInvariant()) {
+                ".png" { "image/png" }
+                ".jpg" { "image/jpeg" }
+                ".jpeg" { "image/jpeg" }
+                ".svg" { "image/svg+xml" }
+                default { "application/octet-stream" }
+            }
+            Write-Response -Context $Context -StatusCode 200 -ContentType $assetType -Bytes ([System.IO.File]::ReadAllBytes($assetPath))
         } elseif ($path -eq "/api/metrics") {
             $metricRows = @($script:historyRows.ToArray())
             $sinceText = [string]$Context.Request.QueryString["since"]
@@ -618,7 +653,7 @@ function Handle-HttpRequest {
             $limit = 0
             $limitText = [string]$Context.Request.QueryString["limit"]
             if (-not [int]::TryParse($limitText, [ref]$limit)) { $limit = 0 }
-            $limit = [Math]::Max(0, [Math]::Min(50000, $limit))
+    $limit = [Math]::Max(0, [Math]::Min(90000, $limit))
             if ($limit -gt 0 -and $metricRows.Count -gt $limit) { $metricRows = @($metricRows | Select-Object -Last $limit) }
             Write-JsonResponse -Context $Context -Object $metricRows
         } elseif ($path -eq "/api/summary") {
@@ -701,7 +736,17 @@ function Handle-HttpRequest {
     }
 }
 
+function Copy-DashboardAssets {
+    if (-not (Test-Path -LiteralPath $dashboardAssetsSource)) { return }
+    $targetAssets = Join-Path $runFolder "assets"
+    if (-not (Test-Path -LiteralPath $targetAssets)) { New-Item -ItemType Directory -Path $targetAssets -Force | Out-Null }
+    foreach ($asset in @(Get-ChildItem -LiteralPath $dashboardAssetsSource -File)) {
+        Copy-Item -LiteralPath $asset.FullName -Destination (Join-Path $targetAssets $asset.Name) -Force
+    }
+}
+
 function Write-Report {
+    Copy-DashboardAssets
     $allRows = @(Import-Csv -LiteralPath $metricsPath -Encoding UTF8)
     $aggregates = @(Get-Aggregates -Rows $allRows)
     $summary = Get-Summary -Rows $allRows
@@ -720,6 +765,7 @@ function Write-Report {
 }
 
 function Write-LiveDashboard {
+    Copy-DashboardAssets
     $recentRows = @($script:historyRows.ToArray())
     if ($recentRows.Count -gt 9600) {
         $recentRows = @($recentRows | Select-Object -Last 9600)
