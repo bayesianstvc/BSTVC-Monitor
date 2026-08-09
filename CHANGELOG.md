@@ -2,6 +2,7 @@
 
 ## 0.5.7 — 2026-08-09
 
+- Corrected the portable Windows package to include `dashboard.html`; the launcher now checks required files before starting and reports an actionable re-extraction message instead of failing silently.
 - Replaced absolute best-configuration wording with cautious current resource-performance leader wording and made model name the primary PID-card identity.
 - Added complete-cycle/short-fill sampling status, three ended-record retention levels, same-running-phase comparison, export preflight, and automatic-threshold evidence.
 - Added automatic desktop density presets, sticky live status, fixed PID/model columns in advanced diagnostics, compact multi-PID legends, and a secondary-action drawer for process cards.
