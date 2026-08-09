@@ -1,6 +1,3 @@
-Exit code: 0
-Wall time: 1.5 seconds
-Output:
 # Changelog
 
 ## 0.5.7 — 2026-08-09
@@ -30,4 +27,3 @@ Output:
 ## 0.4.0 and earlier
 
 Earlier development history is preserved in the repository’s Git history and the preceding local release work.
-

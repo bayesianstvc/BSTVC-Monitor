@@ -1,6 +1,3 @@
-Exit code: 0
-Wall time: 1.5 seconds
-Output:
 # Accuracy and interpretation
 
 BSTVC Monitor is designed to make an INLA run easier to compare against Windows Task Manager and against other thread configurations. It is a measurement aid, not a replacement for Task Manager, the model log, or scientific validation.
@@ -40,4 +37,3 @@ Stage labels are evidence-based hints. Warm-up usually has short or changing act
 - Automatic phase detection is a practical classification from observed metrics, not a direct trace of INLA internals.
 - A high average CPU can coexist with a long runtime or an unacceptable memory cost. The composite score is decision support, not a universal efficiency theorem.
 - The monitor observes the process named `inla.exe`; it does not inspect model syntax, result quality, or convergence internals.
-

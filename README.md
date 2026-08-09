@@ -1,6 +1,3 @@
-Exit code: 0
-Wall time: 1.6 seconds
-Output:
 <p align="center">
   <img src="docs/images/bstvc-monitor-logo.png" alt="BSTVC Monitor logo" width="220">
 </p>
@@ -24,6 +21,8 @@ After the download finishes:
 2. Open the extracted `BSTVC-Monitor-v0.5.7-windows` folder.
 3. Double-click **`Start-BSTVC-Monitor.cmd`**. This is the correct file that starts the collector and opens the interface.
 4. Wait for the browser to open `http://127.0.0.1:8765/`, then start or stop `inla.exe` whenever you need.
+
+If another BSTVC Monitor is already using port 8765, this package starts its own current dashboard on the next available local port instead of silently reusing an older monitor process.
 
 > **Do not double-click `dashboard.html` to start the tool.** It is the browser interface loaded by the local monitor; opening it directly cannot connect to the local API. Always start with **`Start-BSTVC-Monitor.cmd`**.
 
@@ -217,4 +216,3 @@ If this monitor helps a published study, please cite the repository and describe
 ## 中文入口
 
 中文说明见 [README.zh-CN.md](README.zh-CN.md)。英文界面是默认设置，用户可在页面顶部一键切换中文。
-

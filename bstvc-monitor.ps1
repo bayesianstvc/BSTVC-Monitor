@@ -1,8 +1,4 @@
-Exit code: 0
-Wall time: 1.5 seconds
-Total output lines: 886
-Output:
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [string]$ProcessName = "inla",
     [string]$OutputDirectory = "",
@@ -407,7 +403,137 @@ function Sample-Processes {
     $hostCpuMetrics = $script:cachedHostCpuMetrics
     if ($null -eq $hostCpuMetrics) { $hostCpuMetrics = [PSCustomObject]@{ utility = $null; time = $null; scale = 1.0 } }
     $hostCpu = $hostCpuMetrics.utility
-    $hostCpuTime = $hostC…2489 tokens truncated…ime of this work is then
+    $hostCpuTime = $hostCpuMetrics.time
+    $cpuUtilityScale = $hostCpuMetrics.scale
+    $hostMemory = $script:cachedHostMemory
+    $windowsCpuByPid = if ($null -ne $script:cachedWindowsCpuByPid) { $script:cachedWindowsCpuByPid } else { @{} }
+    $processDiagnosticsByPid = if ($null -ne $script:cachedWindowsProcessDiagnosticsByPid) { $script:cachedWindowsProcessDiagnosticsByPid } else { @{} }
+    $currentPids = [System.Collections.Generic.HashSet[int]]::new()
+    $currentProcessStarts = @{}
+    foreach ($process in $processes) {
+        $currentPid = [int]$process.Id
+        [void]$currentPids.Add($currentPid)
+        try { $currentProcessStarts[$currentPid] = [DateTimeOffset]$process.StartTime } catch {}
+    }
+    $restartedPids = [System.Collections.Generic.HashSet[int]]::new()
+    foreach ($oldPid in @($script:previousPids)) {
+        $metadata = if ($script:processMetadata.ContainsKey($oldPid)) { $script:processMetadata[$oldPid] } else { $null }
+        $pidReused = $false
+        if ($currentPids.Contains($oldPid) -and $metadata -and $metadata.start_time -and $currentProcessStarts.ContainsKey($oldPid)) {
+            $oldStart = ([DateTimeOffset]$metadata.start_time).ToString("o")
+            $newStart = ([DateTimeOffset]$currentProcessStarts[$oldPid]).ToString("o")
+            $pidReused = $oldStart -ne $newStart
+        }
+        if (-not $currentPids.Contains($oldPid) -or $pidReused) {
+            $eventName = if ($pidReused) { "restarted" } else { "exited" }
+            $eventDetail = if ($pidReused) { "PID reused; process start time changed" } else { "process disappeared" }
+            Write-Event -Event $eventName -ProcessId "$oldPid" -Detail $eventDetail
+            $stopped = [PSCustomObject]@{
+                timestamp = $now.ToString("o"); run_id = $safeRunId; label = $Label; status = "stopped"; pid = $oldPid; process_name = $targetName
+                process_start_time = if ($metadata -and $metadata.start_time) { $metadata.start_time.ToString("o") } else { $null }
+                process_runtime_seconds = if ($metadata) { $metadata.last_runtime_seconds } else { $null }
+                cpu_pct_total = $null; cpu_pct_logical_total = $null; cpu_core_equivalent = $null; windows_counter_cpu_pct = $null
+                working_set_mb = $null; private_mb = $null; virtual_memory_mb = $null; paged_memory_mb = $null
+                thread_count = if ($metadata) { $metadata.last_thread_count } else { $null }
+                io_read_bytes_per_sec = $null; io_write_bytes_per_sec = $null; page_faults_per_sec = $null; context_switches_per_sec = $null
+                process_count = $processes.Count; host_cpu_pct = $hostCpu; host_cpu_time_pct = $hostCpuTime; cpu_utility_scale = $cpuUtilityScale; host_memory_pct = $hostMemory
+            }
+            Write-CsvObject -Writer $metricsWriter -Object $stopped
+            Add-HistoryRow -Row $stopped
+            $script:lastCpu.Remove($oldPid)
+            $script:processMetadata.Remove($oldPid)
+            if ($pidReused) { [void]$restartedPids.Add($oldPid) }
+        }
+    }
+    foreach ($newPid in @($currentPids)) {
+        if (-not $script:previousPids.Contains($newPid) -or $restartedPids.Contains($newPid)) {
+            $detail = if ($restartedPids.Contains($newPid)) { "new process instance after PID reuse" } else { "process detected" }
+            Write-Event -Event "started" -ProcessId "$newPid" -Detail $detail
+            $script:processMetadata[$newPid] = [PSCustomObject]@{ first_seen_at = $now; start_time = $null; last_runtime_seconds = $null; last_thread_count = $null; last_seen_at = $now }
+        }
+    }
+
+    if ($processes.Count -eq 0) {
+        $waiting = [PSCustomObject]@{
+            timestamp = $now.ToString("o"); run_id = $safeRunId; label = $Label; status = "waiting"; pid = $null; process_name = $targetName; process_start_time = $null; process_runtime_seconds = $null
+            cpu_pct_total = $null; cpu_pct_logical_total = $null; cpu_core_equivalent = $null; windows_counter_cpu_pct = $null; working_set_mb = $null; private_mb = $null; virtual_memory_mb = $null; paged_memory_mb = $null
+            thread_count = $null; process_count = 0; io_read_bytes_per_sec = $null; io_write_bytes_per_sec = $null; page_faults_per_sec = $null; context_switches_per_sec = $null; host_cpu_pct = $hostCpu; host_cpu_time_pct = $hostCpuTime; cpu_utility_scale = $cpuUtilityScale; host_memory_pct = $hostMemory
+        }
+        Write-CsvObject -Writer $metricsWriter -Object $waiting
+        Add-HistoryRow -Row $waiting
+    } else {
+        foreach ($process in $processes) {
+            $processId = [int]$process.Id
+            if (-not $script:processMetadata.ContainsKey($processId) -or $restartedPids.Contains($processId)) {
+                $script:processMetadata[$processId] = [PSCustomObject]@{ first_seen_at = $now; start_time = $null; last_runtime_seconds = $null; last_thread_count = $null; last_seen_at = $now }
+            }
+            $processStartTime = $null
+            try { $processStartTime = [DateTimeOffset]$process.StartTime } catch {}
+            if ($null -ne $processStartTime) {
+                $script:processMetadata[$processId].start_time = $processStartTime
+            } else {
+                $processStartTime = $script:processMetadata[$processId].start_time
+            }
+            $processRuntimeSeconds = if ($null -ne $processStartTime) { [Math]::Max(0, [Math]::Round(($now - $processStartTime).TotalSeconds, 3)) } else { [Math]::Max(0, [Math]::Round(($now - $script:processMetadata[$processId].first_seen_at).TotalSeconds, 3)) }
+            $status = "warmup"
+            $cpuTotal = 0.0
+            $cpuLogicalTotal = 0.0
+            $cpuCore = 0.0
+            $windowsCounterCpu = $null
+            try {
+                $cpuSeconds = [double]$process.TotalProcessorTime.TotalSeconds
+                if ($script:lastCpu.ContainsKey($processId)) {
+                    $previous = $script:lastCpu[$processId]
+                    $elapsed = ($now - $previous.timestamp).TotalSeconds
+                    if ($elapsed -gt 0) {
+                        $cpuCore = [Math]::Max(0, [Math]::Min(100 * [Environment]::ProcessorCount, 100 * (($cpuSeconds - $previous.cpuSeconds) / $elapsed)))
+                        $cpuLogicalTotal = [Math]::Max(0, [Math]::Min(100, $cpuCore / $script:logicalProcessorCount))
+                        # Windows Task Manager's Processes/Performance CPU values use Processor Utility,
+                        # while Process\% Processor Time is a time-based counter. Apply the host utility/time
+                        # ratio to the PID's time-based total so the main series follows Task Manager's basis.
+                        $cpuTotal = [Math]::Max(0, [Math]::Min(100, $cpuLogicalTotal * $cpuUtilityScale))
+                        $status = "running"
+                    }
+                }
+                $script:lastCpu[$processId] = [PSCustomObject]@{ timestamp = $now; cpuSeconds = $cpuSeconds }
+            } catch {
+                $status = "unreadable"
+            }
+            if ($windowsCpuByPid.ContainsKey($processId)) {
+                # Keep Process\% Processor Time as an advanced diagnostic only. It is
+                # measured in a separate performance-counter window and can be out of
+                # phase with the Get-Process CPU-time and Working Set snapshot. The
+                # primary Task Manager-basis value above must not be overwritten here.
+                $windowsCounterCpu = $windowsCpuByPid[$processId]
+            }
+            $threadCount = $null
+            try { $threadCount = [int]$process.Threads.Count } catch {}
+            $diagnosticCounters = if ($processDiagnosticsByPid.ContainsKey($processId)) { $processDiagnosticsByPid[$processId] } else { $null }
+            $row = [PSCustomObject]@{
+                timestamp = $now.ToString("o"); run_id = $safeRunId; label = $Label; status = $status; pid = $processId; process_name = $targetName; process_start_time = if ($null -ne $processStartTime) { $processStartTime.ToString("o") } else { $null }; process_runtime_seconds = $processRuntimeSeconds
+                cpu_pct_total = [Math]::Round($cpuTotal, 3); cpu_pct_logical_total = [Math]::Round($cpuLogicalTotal, 3); cpu_core_equivalent = [Math]::Round($cpuCore, 3); windows_counter_cpu_pct = $windowsCounterCpu
+                working_set_mb = [Math]::Round(([double]$process.WorkingSet64 / 1MB), 3)
+                private_mb = [Math]::Round(([double]$process.PrivateMemorySize64 / 1MB), 3)
+                virtual_memory_mb = [Math]::Round(([double]$process.VirtualMemorySize64 / 1MB), 3)
+                paged_memory_mb = [Math]::Round(([double]$process.PagedMemorySize64 / 1MB), 3)
+                thread_count = $threadCount
+                io_read_bytes_per_sec = if ($diagnosticCounters) { $diagnosticCounters.io_read } else { $null }
+                io_write_bytes_per_sec = if ($diagnosticCounters) { $diagnosticCounters.io_write } else { $null }
+                page_faults_per_sec = if ($diagnosticCounters) { $diagnosticCounters.page_faults } else { $null }
+                context_switches_per_sec = if ($diagnosticCounters) { $diagnosticCounters.context_switches } else { $null }
+                process_count = $processes.Count; host_cpu_pct = $hostCpu; host_cpu_time_pct = $hostCpuTime; cpu_utility_scale = $cpuUtilityScale; host_memory_pct = $hostMemory
+            }
+            Write-CsvObject -Writer $metricsWriter -Object $row
+            Add-HistoryRow -Row $row
+            $script:processMetadata[$processId].last_runtime_seconds = $processRuntimeSeconds
+            $script:processMetadata[$processId].last_thread_count = $threadCount
+            $script:processMetadata[$processId].last_seen_at = $now
+        }
+    }
+    $script:previousPids = $currentPids
+    $script:sampleCount++
+    # Refresh slow diagnostics only after the primary CPU/memory rows have
+    # been timestamped and written. The elapsed time of this work is then
     # included in the next sample interval instead of corrupting this one.
     if ($refreshDiagnostics) {
         $script:cachedHostCpuMetrics = Get-HostCpuCounters
@@ -757,4 +883,3 @@ try {
         Write-Warning ("The report could not be generated, but the raw logs were saved: {0}" -f $_.Exception.Message)
     }
 }
-

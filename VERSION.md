@@ -1,6 +1,3 @@
-Exit code: 0
-Wall time: 1.4 seconds
-Output:
 # BSTVC Monitor v0.5.7
 
 Release date: 2026-08-09
@@ -24,4 +21,3 @@ Highlights:
 - Portable launcher, local-only storage, accuracy guidance, issue templates, and AGPL-3.0 licensing.
 
 This is a research-support monitor. Always validate model convergence, result quality, and completed runtime in addition to resource utilization.
-

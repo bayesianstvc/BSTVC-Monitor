@@ -1,6 +1,3 @@
-Exit code: 0
-Wall time: 1.5 seconds
-Output:
 <p align="center">
   <img src="docs/images/bstvc-monitor-logo.png" alt="BSTVC Monitor 标识" width="220">
 </p>
@@ -21,6 +18,8 @@ BSTVC Monitor 是面向 Windows 的 INLA 进程资源监视器。它帮助用户
 2. 打开解压后的 `BSTVC-Monitor-v0.5.7-windows` 文件夹。
 3. 双击 **`Start-BSTVC-Monitor.cmd`**。这是正确的启动文件，会启动采集器并打开网页界面。
 4. 浏览器打开 `http://127.0.0.1:8765/` 后即可开始监测。
+
+如果 8765 端口已经被其他 BSTVC Monitor 占用，本版本会自动使用下一个可用的本地端口启动当前版本，不会静默复用旧版监视进程。
 
 > **不要直接双击 `dashboard.html` 启动工具。** 它是由本地监视器加载的网页界面，单独打开无法连接本地 API。请始终从 **`Start-BSTVC-Monitor.cmd`** 开始。
 
@@ -68,4 +67,3 @@ v0.5.7 进一步收紧了桌面监控工作台：顶部标题区更矮并融入 
 ## 隐私与许可
 
 工具只在本机运行，默认只绑定 `127.0.0.1`，不上传模型数据或监测结果。项目采用 [AGPL-3.0](LICENSE) 开源许可。
-
