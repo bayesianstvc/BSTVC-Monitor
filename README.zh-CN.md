@@ -64,6 +64,17 @@ v0.5.7 进一步收紧了桌面监控工作台：顶部标题区更矮并融入 
 
 完整的指标定义与限制见 [Accuracy and interpretation](docs/accuracy-and-interpretation.md)，英文完整说明见 [README.md](README.md)。
 
+## 相关 BSTVC 产品
+
+[BSTVC 桌面版 V2](https://bayesianstvc.github.io/BSTVC-Desktop/v2/) 提供图形化 Windows 分析流程。英文 x64 安装包封包日期为 **2026.10.25**，发布日期为 **2026-11-03**。
+
+- [下载英文桌面版 V2](https://github.com/bayesianstvc/BSTVC-Desktop/releases/download/v2026.10.25/BSTVC_desktop_EN_win_x64_26.10.25_setup.exe)。
+- [发布说明、校验和与安装提示](https://github.com/bayesianstvc/BSTVC-Desktop/releases/tag/v2026.10.25)。
+- [英文更新与公开案例比较](https://bayesianstvc.github.io/BSTVC-Desktop/v2/) · [中文更新与视频](https://bayesianstvc.github.io/BSTVC-Desktop/zh/v2/)。
+- [BSTVC 品牌官网](https://bayesianstvc.github.io/) · [宋超主页](https://chaosong.blog/)。
+
+V2 是桌面版的升级，不改变 BSTVC Monitor 的版本。链接中的案例比较描述已报告的可信区间宽度，不代表普遍准确性或区间校准验证。
+
 ## 隐私与许可
 
 工具只在本机运行，默认只绑定 `127.0.0.1`，不上传模型数据或监测结果。项目采用 [AGPL-3.0](LICENSE) 开源许可。
