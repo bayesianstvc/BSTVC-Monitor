@@ -6,6 +6,10 @@
 
 BSTVC Monitor 是面向 Windows 的 INLA 进程资源监视器。它帮助用户在相同模型、数据和收敛条件下比较不同线程参数，寻找适合自己电脑或工作站的线程数。
 
+> **生态更新：BSTVC 桌面版 V2（独立 Windows 应用）。**
+> 本批三个公开案例的 V1/V2 对比材料报告：回归系数 95% 贝叶斯可信区间的案例汇总宽度，时间部分缩小约 **94%–99%**，空间部分缩小约 **38%–98%**。
+> [查看桌面版 V2](https://bayesianstvc.github.io/BSTVC-Desktop/v2/) · [下载英文 Windows 版](https://github.com/bayesianstvc/BSTVC-Desktop/releases/download/v2026.10.25/BSTVC_desktop_EN_win_x64_26.10.25_setup.exe)。BSTVC Monitor 仍为 v0.5.7。以上为三个案例的已报告宽度比较；区间收窄本身不能证明估计更准确或区间已校准。
+
 > 重要：产品名称是 **BSTVC Monitor**，实际监测的 Windows 进程通常仍然是 `inla.exe`，不需要修改 INLA 或模型代码。
 
 ## 快速开始：下载后只需双击一个文件
@@ -66,6 +70,10 @@ v0.5.7 进一步收紧了桌面监控工作台：顶部标题区更矮并融入 
 
 ## 相关 BSTVC 产品
 
+本批三个公开案例的 V1/V2 对比材料报告：回归系数 95% 贝叶斯可信区间的案例汇总宽度，时间部分缩小约 **94%–99%**，空间部分缩小约 **38%–98%**。
+
+以上为三个案例的已报告宽度比较；区间收窄本身不能证明估计更准确或区间已校准。
+
 [BSTVC 桌面版 V2](https://bayesianstvc.github.io/BSTVC-Desktop/v2/) 提供图形化 Windows 分析流程。英文 x64 安装包封包日期为 **2026.10.25**，发布日期为 **2026-11-04**。
 
 - [下载英文桌面版 V2](https://github.com/bayesianstvc/BSTVC-Desktop/releases/download/v2026.10.25/BSTVC_desktop_EN_win_x64_26.10.25_setup.exe)。
@@ -73,7 +81,7 @@ v0.5.7 进一步收紧了桌面监控工作台：顶部标题区更矮并融入 
 - [英文更新与公开案例比较](https://bayesianstvc.github.io/BSTVC-Desktop/v2/) · [中文更新与视频](https://bayesianstvc.github.io/BSTVC-Desktop/zh/v2/)。
 - [BSTVC 品牌官网](https://bayesianstvc.github.io/) · [宋超主页](https://chaosong.blog/)。
 
-V2 是桌面版的升级，不改变 BSTVC Monitor 的版本。链接中的案例比较描述已报告的可信区间宽度，不代表普遍准确性或区间校准验证。
+V2 是桌面版的升级，不改变 BSTVC Monitor 的版本。
 
 ## 隐私与许可
 

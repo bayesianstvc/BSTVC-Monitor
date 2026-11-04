@@ -6,9 +6,13 @@
 
 Real-time INLA process monitor for Windows — find your optimal thread count and solve Bayesian latent Gaussian models faster.
 
+> **Companion release: BSTVC Desktop V2 — a separate Windows application.**
+> The three public case comparisons report case-level summaries of 95% regression-coefficient credible-interval widths that are about **94%–99% narrower for temporal coefficients** and **38%–98% narrower for spatial coefficients** than V1.
+> [Explore Desktop V2](https://bayesianstvc.github.io/BSTVC-Desktop/v2/) · [Download the English Windows edition](https://github.com/bayesianstvc/BSTVC-Desktop/releases/download/v2026.10.25/BSTVC_desktop_EN_win_x64_26.10.25_setup.exe). BSTVC Monitor v0.5.7 keeps its own version. These are reported width comparisons in three cases; narrower intervals alone do not establish greater accuracy or calibration.
+
 [![Windows](https://img.shields.io/badge/platform-Windows-0078D4?logo=windows&logoColor=white)](https://www.microsoft.com/windows)
 [![PowerShell](https://img.shields.io/badge/runtime-PowerShell-5391FE?logo=powershell&logoColor=white)](https://learn.microsoft.com/powershell/)
-[![Version](https://img.shields.io/badge/version-0.5.5-0f766e)](VERSION.md)
+[![Version](https://img.shields.io/badge/version-0.5.7-0f766e)](VERSION.md)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-orange)](LICENSE)
 
 ## Download and run — the shortest path
@@ -215,6 +219,10 @@ If this monitor helps a published study, please cite the repository and describe
 
 ## Related BSTVC products
 
+The three public case comparisons report case-level summaries of 95% regression-coefficient credible-interval widths that are about **94%–99% narrower for temporal coefficients** and **38%–98% narrower for spatial coefficients** than V1.
+
+These are reported width comparisons in three cases; narrower intervals alone do not establish greater accuracy or calibration.
+
 For a graphical Windows analysis workflow, [BSTVC Desktop V2](https://bayesianstvc.github.io/BSTVC-Desktop/v2/) is available separately. The English x64 installer is dated **26.10.25** and was released on **4 November 2026**.
 
 - [Download English Desktop V2](https://github.com/bayesianstvc/BSTVC-Desktop/releases/download/v2026.10.25/BSTVC_desktop_EN_win_x64_26.10.25_setup.exe).
@@ -222,7 +230,7 @@ For a graphical Windows analysis workflow, [BSTVC Desktop V2](https://bayesianst
 - [English update and public case comparisons](https://bayesianstvc.github.io/BSTVC-Desktop/v2/) · [中文更新与视频](https://bayesianstvc.github.io/BSTVC-Desktop/zh/v2/).
 - [BSTVC ecosystem](https://bayesianstvc.github.io/) · [Chao Song](https://chaosong.blog/).
 
-This V2 release applies to Desktop; it does not change this companion product's version. The linked case comparisons describe reported credible-interval widths, not general accuracy or calibration.
+This V2 release applies to Desktop; it does not change this companion product's version.
 
 ## 中文入口
 
