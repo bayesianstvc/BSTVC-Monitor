@@ -66,7 +66,7 @@ v0.5.7 进一步收紧了桌面监控工作台：顶部标题区更矮并融入 
 
 ## 相关 BSTVC 产品
 
-[BSTVC 桌面版 V2](https://bayesianstvc.github.io/BSTVC-Desktop/v2/) 提供图形化 Windows 分析流程。英文 x64 安装包封包日期为 **2026.10.25**，发布日期为 **2026-11-03**。
+[BSTVC 桌面版 V2](https://bayesianstvc.github.io/BSTVC-Desktop/v2/) 提供图形化 Windows 分析流程。英文 x64 安装包封包日期为 **2026.10.25**，发布日期为 **2026-11-04**。
 
 - [下载英文桌面版 V2](https://github.com/bayesianstvc/BSTVC-Desktop/releases/download/v2026.10.25/BSTVC_desktop_EN_win_x64_26.10.25_setup.exe)。
 - [发布说明、校验和与安装提示](https://github.com/bayesianstvc/BSTVC-Desktop/releases/tag/v2026.10.25)。
