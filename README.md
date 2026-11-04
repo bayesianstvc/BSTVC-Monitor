@@ -215,14 +215,13 @@ If this monitor helps a published study, please cite the repository and describe
 
 ## Related BSTVC products
 
-For a graphical Windows analysis workflow, [BSTVC Desktop V2](https://bayesianstvc.github.io/BSTVC-Desktop/v2/) is available separately. The English x64 installer is dated **26.10.25** and was released on **4 November 2026**.
+For a graphical Windows analysis workflow, **BSTVC Desktop V2 is in release preparation; installer publication is in progress.** The English x64 installer has package date **26.10.25**. Check the Desktop website for an availability announcement after publication is complete.
 
-- [Download English Desktop V2](https://github.com/bayesianstvc/BSTVC-Desktop/releases/download/v2026.10.25/BSTVC_desktop_EN_win_x64_26.10.25_setup.exe).
-- [Release notes, checksum, and installation information](https://github.com/bayesianstvc/BSTVC-Desktop/releases/tag/v2026.10.25).
-- [English update and public case comparisons](https://bayesianstvc.github.io/BSTVC-Desktop/v2/) · [中文更新与视频](https://bayesianstvc.github.io/BSTVC-Desktop/zh/v2/).
+- [Desktop website — publication updates](https://bayesianstvc.github.io/BSTVC-Desktop/).
+- [English V2 introduction — pending publication](https://bayesianstvc.github.io/BSTVC-Desktop/v2/) · [中文更新与视频 — 待发布](https://bayesianstvc.github.io/BSTVC-Desktop/zh/v2/).
 - [BSTVC ecosystem](https://bayesianstvc.github.io/) · [Chao Song](https://chaosong.blog/).
 
-This V2 release applies to Desktop; it does not change this companion product's version. The linked case comparisons describe reported credible-interval widths, not general accuracy or calibration.
+Desktop V2 is a separate update; it does not change this companion product's version. The linked case comparisons describe reported credible-interval widths, not general accuracy or calibration.
 
 ## 中文入口
 
